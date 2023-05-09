@@ -1,19 +1,48 @@
-import pygame
+from pydub import AudioSegment
+from pydub.playback import play
+import matplotlib.pyplot as plt
 
-def playSong(song):
-    # initialize pygame mixer
-    pygame.mixer.init()
 
-    # load the MP3 file
-    pygame.mixer.music.load("./songs/100-bpm-drum-loop-sample-c-sharp-key.mp3")
+def get_raw_data(sound):
+    # get raw data
+    return sound.get_array_of_samples()
 
-    # play the MP3 file
-    pygame.mixer.music.play()
 
-    # wait for the song to finish playing
-    while pygame.mixer.music.get_busy():
-        pygame.time.Clock().tick(1)
+def get_frame_rate(sound):
+    # get frame rate
+    return sound.frame_rate
 
-    # clean up the pygame mixer
-    pygame.mixer.quit()
 
+def get_channels(sound):
+    # get channels
+    return sound.sample_width
+
+
+def get_time(raw_data, frame_rate):
+    time = []
+    for i in range(len(raw_data)):
+        time.append(i / frame_rate)
+    return time
+
+
+def show_plot(raw_data, time):
+    # code from https://stackoverflow.com/questions/38797934/get-the-amplitude-data-from-an-mp3-audio-files-using-python
+
+    # create title
+    plt.title("Waveform of an mp3 file")
+    # plot data
+    plt.plot(time[:100000], raw_data[:100000], color="black")
+    # y label
+    plt.ylabel("Amplitude")
+    # show plot
+    plt.show()
+
+
+def main():
+    sound_url = './songs/100-bpm-drum-loop-sample-c-sharp-key.mp3'
+    sound = AudioSegment.from_mp3(sound_url)
+
+    show_plot(get_raw_data(sound), get_time(get_raw_data(sound), get_frame_rate(sound)))
+
+
+main()

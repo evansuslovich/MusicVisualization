@@ -34,3 +34,4 @@ plt.title("Waveform of Wave File")
 plt.plot(Time, raw, color="black")
 plt.ylabel("Amplitude")
 plt.show()
+
