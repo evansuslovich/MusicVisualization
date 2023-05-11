@@ -22,7 +22,7 @@ def get_time(raw_data, frame_rate):
 
 
 # with time as x-axis
-def show_plot(raw_data, time):
+def show_plot_time(raw_data, time):
     # code from https://stackoverflow.com/questions/38797934/get-the-amplitude-data-from-an-mp3-audio-files-using-python
     # create title
     plt.title("Waveform of an mp3 file")
@@ -35,7 +35,7 @@ def show_plot(raw_data, time):
 
 
 # indexes of array as x-axis
-def show_plot(raw_data):
+def show_plot_indices(raw_data):
     # code from https://stackoverflow.com/questions/38797934/get-the-amplitude-data-from-an-mp3-audio-files-using-python
     # create title
     plt.title("Waveform of an mp3 file")
@@ -131,7 +131,7 @@ def main():
     bpm_min = (average_sum_of_diff_min / sound.frame_rate) * 100
 
     print("average bpm of max and min: \n" + str((bpm_min + bpm_max) / 2))
-    show_plot(raw_data)
+    show_plot_time(raw_data, time)
 
 
 main()
