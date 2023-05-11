@@ -49,7 +49,13 @@ def show_plot_indices(raw_data):
 
 # return an array, index 0 is max, index 1 is min.
 def get_max_and_min_in_raw_data(raw_data):
+
     result = []
+
+    if len(raw_data) == 0:
+        result.append(-1)
+        result.append(-1)
+        return result
 
     # gets the maximum and minimum values
     max_val = raw_data[0]
@@ -67,9 +73,8 @@ def get_max_and_min_in_raw_data(raw_data):
 
 
 # getting the values with high amplitudes
-def getting_values_between_value_and_buffer(raw_data, val, buffer_val):
+def getting_indices_between_value_and_buffer(raw_data, val, buffer_val):
     # loop through the entire array of raw data and see if it fits through buffer <= number <= max
-
     horizontal_cleaning = []
     if val < 0:
         for i in range(len(raw_data)):
@@ -78,6 +83,7 @@ def getting_values_between_value_and_buffer(raw_data, val, buffer_val):
     else:
         for i in range(len(raw_data)):
             if buffer_val <= raw_data[i] <= val:
+                print(i)
                 horizontal_cleaning.append(i)
 
     return horizontal_cleaning
@@ -92,6 +98,31 @@ def removing_extra_noise_horizontally(fit_between_buffer_and_max, length_of_data
             vertical_cleaning.append(fit_between_buffer_and_max[i])
 
     return vertical_cleaning
+
+def averaging_noise(fit_between_buffer_and_max, length_of_data):
+    vertical_cleaning = []
+    group_vertices = []
+    for i in range(len(fit_between_buffer_and_max) - 1):
+        if (fit_between_buffer_and_max[i + 1] - fit_between_buffer_and_max[i]) < (length_of_data * 0.05):
+            group_vertices.append(fit_between_buffer_and_max[i])
+        elif len(group_vertices) > 1:
+            sum = 0
+            for i in group_vertices:
+                print("elif: " +  str(i))
+                sum += i
+            sum = (sum / len(group_vertices))
+            print("sum: " + str(sum))
+            vertical_cleaning.append(sum)
+            group_vertices = []
+        else:
+            vertical_cleaning.append(group_vertices)
+            group_vertices = []
+
+    return vertical_cleaning
+
+
+
+
 
 
 # finds the difference between consecutive indices
@@ -118,20 +149,28 @@ def main():
 
     length_of_raw_data = len(raw_data)
 
-    horizontal_cleaning_max = getting_values_between_value_and_buffer(raw_data, max_val, max_val * 0.95)
-    horizontal_cleaning_min = getting_values_between_value_and_buffer(raw_data, min_val, min_val * 0.95)
+    horizontal_cleaning_max = getting_indices_between_value_and_buffer(raw_data, max_val, max_val * 0.95)
+    horizontal_cleaning_min = getting_indices_between_value_and_buffer(raw_data, min_val, min_val * 0.95)
 
-    horizontal_and_vertical_cleaning_max = removing_extra_noise_horizontally(horizontal_cleaning_max, length_of_raw_data)
-    horizontal_and_vertical_cleaning_min = removing_extra_noise_horizontally(horizontal_cleaning_min, length_of_raw_data)
+    # horizontal_and_vertical_cleaning_max_process_1 = removing_extra_noise_horizontally(horizontal_cleaning_max, length_of_raw_data)
+    # horizontal_and_vertical_cleaning_max_process_2 = averaging_noise(horizontal_cleaning_max, length_of_raw_data)
+    # horizontal_and_vertical_cleaning_min = averaging_noise(horizontal_cleaning_max, length_of_raw_data)
 
-    average_sum_of_diff_max = average_sum_of_differences(horizontal_and_vertical_cleaning_max)
-    average_sum_of_diff_min = average_sum_of_differences(horizontal_and_vertical_cleaning_min)
+    # print(horizontal_and_vertical_cleaning_max_process_1)
+    # print(horizontal_and_vertical_cleaning_max_process_2)
 
-    bpm_max = (average_sum_of_diff_max / sound.frame_rate) * 100
-    bpm_min = (average_sum_of_diff_min / sound.frame_rate) * 100
+    # print(horizontal_and_vertical_cleaning_min)
 
-    print("average bpm of max and min: \n" + str((bpm_min + bpm_max) / 2))
-    show_plot_time(raw_data, time)
+    # horizontal_and_vertical_cleaning_min = removing_extra_noise_horizontally(horizontal_cleaning_min, length_of_raw_data)
+    #
+    # average_sum_of_diff_max = average_sum_of_differences(horizontal_and_vertical_cleaning_max)
+    # average_sum_of_diff_min = average_sum_of_differences(horizontal_and_vertical_cleaning_min)
+    #
+    # bpm_max = (average_sum_of_diff_max / sound.frame_rate) * 100
+    # bpm_min = (average_sum_of_diff_min / sound.frame_rate) * 100
+    #
+    # print("average bpm of max and min: \n" + str((bpm_min + bpm_max) / 2))
+    # show_plot_time(raw_data, time)
 
 
 main()
