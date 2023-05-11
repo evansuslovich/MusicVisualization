@@ -67,12 +67,18 @@ def get_max_and_min_in_raw_data(raw_data):
 
 
 # getting the values with high amplitudes
-def getting_values_between_max_value_and_buffer(raw_data, max_val, buffer_val):
+def getting_values_between_value_and_buffer(raw_data, val, buffer_val):
     # loop through the entire array of raw data and see if it fits through buffer <= number <= max
+
     horizontal_cleaning = []
-    for i in range(len(raw_data)):
-        if buffer_val <= raw_data[i] <= max_val:
-            horizontal_cleaning.append(i)
+    if val < 0:
+        for i in range(len(raw_data)):
+            if buffer_val >= raw_data[i] >= val:
+                horizontal_cleaning.append(i)
+    else:
+        for i in range(len(raw_data)):
+            if buffer_val <= raw_data[i] <= val:
+                horizontal_cleaning.append(i)
 
     return horizontal_cleaning
 
@@ -106,20 +112,26 @@ def main():
     time = get_time(raw_data, sound.frame_rate)
 
     max_and_min_values = get_max_and_min_in_raw_data(raw_data)
-    max_val = max_and_min_values[0]
 
+    max_val = max_and_min_values[0]
     min_val = max_and_min_values[1]
 
-    horizontal_cleaning = getting_values_between_max_value_and_buffer(raw_data, max_val, max_val * 0.95)
+    length_of_raw_data = len(raw_data)
 
-    horizontal_and_vertical_cleaning = removing_extra_noise_horizontaly(horizontal_cleaning, len(raw_data))
+    horizontal_cleaning_max = getting_values_between_value_and_buffer(raw_data, max_val, max_val * 0.95)
+    horizontal_cleaning_min = getting_values_between_value_and_buffer(raw_data, min_val, min_val * 0.95)
 
-    average_sum_of_diff = average_sum_of_differences(horizontal_and_vertical_cleaning)
+    horizontal_and_vertical_cleaning_max = removing_extra_noise_horizontally(horizontal_cleaning_max, length_of_raw_data)
+    horizontal_and_vertical_cleaning_min = removing_extra_noise_horizontally(horizontal_cleaning_min, length_of_raw_data)
 
-    bpm = (average_sum_of_diff / sound.frame_rate) * 100
+    average_sum_of_diff_max = average_sum_of_differences(horizontal_and_vertical_cleaning_max)
+    average_sum_of_diff_min = average_sum_of_differences(horizontal_and_vertical_cleaning_min)
 
-    print("BPM: " + str(bpm))
-    show_plot(raw_data)
+    bpm_max = (average_sum_of_diff_max / sound.frame_rate) * 100
+    bpm_min = (average_sum_of_diff_min / sound.frame_rate) * 100
+
+    print("average bpm of max and min: \n" + str((bpm_min + bpm_max) / 2))
+    # show_plot(raw_data)
 
 
 main()
