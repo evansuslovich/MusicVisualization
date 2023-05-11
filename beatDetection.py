@@ -131,7 +131,7 @@ def main():
     bpm_min = (average_sum_of_diff_min / sound.frame_rate) * 100
 
     print("average bpm of max and min: \n" + str((bpm_min + bpm_max) / 2))
-    # show_plot(raw_data)
+    show_plot(raw_data)
 
 
 main()
