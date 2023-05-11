@@ -60,8 +60,35 @@ def get_max_and_min(raw_data):
     result.append(max_val)
     result.append(min_val)
 
-    
+    return result
 
+def cleaning_y_axis(raw_data, max_val, buffer_val):
+    # loop through the entire array of raw data and see if it fits through buffer <= number <= max
+    index_of_max = []
+    for i in range(len(raw_data)):
+        if buffer_val <= raw_data[i] <= max_val:
+            index_of_max.append(i)
+
+    return index_of_max
+
+
+def cleaning_x_axis(fit_between_buffer_and_max, length_of_data):
+    # loop through the indexes_of_max array and removes indexes that are close horizontally
+    result_indexes_of_max = []
+    for i in range(0, len(fit_between_buffer_and_max) - 1):
+        # are the indexes close to each other by a factor of 0.01 * len(raw_data) is this an accurate process?
+        if (fit_between_buffer_and_max[i + 1] - fit_between_buffer_and_max[i]) > (length_of_data * 0.05):
+            result_indexes_of_max.append(fit_between_buffer_and_max[i])
+
+    return result_indexes_of_max
+
+
+def average_sum_of_differences(horizontal_and_vertical_cleaning):
+    sum = 0
+    for i in range(0, len(horizontal_and_vertical_cleaning) - 1):
+        sum += horizontal_and_vertical_cleaning[i + 1] - horizontal_and_vertical_cleaning[i]
+
+    return (sum / len(horizontal_and_vertical_cleaning))
 
 def main():
     sound_url = './songs/100-bpm-drum-loop-sample-c-sharp-key.mp3'
@@ -70,31 +97,20 @@ def main():
     raw_data = get_raw_data(sound)
     time = get_time(raw_data, sound.frame_rate)
 
+    max_and_min_values = get_max_and_min(raw_data)
+    max_val = max_and_min_values[0]
 
+    min_val = max_and_min_values[1]
 
-    # loop through the entire array of raw data and see if it fits through buffer <= number <= max
-    index_of_max = []
-    for i in range(len(raw_data)):
-        if (0.95 * max_val) <= raw_data[i] <= max_val:
-            index_of_max.append(i)
+    horizontal_cleaning= cleaning_y_axis(raw_data, max_val, max_val * 0.95)
 
-    # loop through the indexes_of_max array find if there are unnecessary maxes
-    result_indexes_of_max = []
-    for i in range(0, len(index_of_max) - 1):
-        # are the indexes close to each other by a factor of 0.01 * len(raw_data) is this an accurate process?
-        if (index_of_max[i + 1] - index_of_max[i]) > len(raw_data) * 0.05:
-            result_indexes_of_max.append(index_of_max[i])
+    horizontal_and_vertical_cleaning = cleaning_x_axis(horizontal_cleaning, len(raw_data))
 
-    # average sum of differences
-    sum = 0
-    for i in range(0, len(result_indexes_of_max) - 1):
-        sum += result_indexes_of_max[i + 1] - result_indexes_of_max[i]
-    average_difference_of_indexes = (sum / len(result_indexes_of_max))
+    average_sum_of_diff = average_sum_of_differences(horizontal_and_vertical_cleaning)
 
+    bpm = (average_sum_of_diff / sound.frame_rate) * 100
 
-    bpm = (average_difference_of_indexes / sound.frame_rate) * 100
-
-    print("BPM: " + bpm)
+    print("BPM: " + str(bpm))
     show_plot(raw_data)
 
 
