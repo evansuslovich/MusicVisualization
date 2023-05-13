@@ -49,7 +49,6 @@ def show_plot_indices(raw_data):
 
 # return an array, index 0 is max, index 1 is min.
 def get_max_and_min_in_raw_data(raw_data):
-
     result = []
 
     if len(raw_data) == 0:
@@ -83,10 +82,10 @@ def getting_indices_between_value_and_buffer(raw_data, val, buffer_val):
     else:
         for i in range(len(raw_data)):
             if buffer_val <= raw_data[i] <= val:
-                print(i)
                 horizontal_cleaning.append(i)
 
     return horizontal_cleaning
+
 
 # what if the values between the high amplitudes are close to each other? Remove them if they're close .. extra noise
 def removing_extra_noise_horizontally(fit_between_buffer_and_max, length_of_data):
@@ -99,31 +98,25 @@ def removing_extra_noise_horizontally(fit_between_buffer_and_max, length_of_data
 
     return vertical_cleaning
 
-def averaging_noise(fit_between_buffer_and_max, length_of_data):
-    vertical_cleaning = []
-    group_vertices = []
-    for i in range(len(fit_between_buffer_and_max) - 1):
-        if (fit_between_buffer_and_max[i + 1] - fit_between_buffer_and_max[i]) < (length_of_data * 0.05):
-            group_vertices.append(fit_between_buffer_and_max[i])
-        elif len(group_vertices) > 1:
-            sum = 0
-            for i in group_vertices:
-                print("elif: " +  str(i))
-                sum += i
-            sum = (sum / len(group_vertices))
-            print("sum: " + str(sum))
-            vertical_cleaning.append(sum)
-            group_vertices = []
+
+def averaging_noise(arr, raw_data):
+    print(arr)
+    # print("raw_data length: " + str(len(raw_data) * 0.05))
+
+    subarrays = []
+    current_subarray = [arr[0]]
+    for i in range(1, len(arr)):
+        if arr[i] - arr[i - 1] < len(raw_data) * 0.025:
+            current_subarray.append(arr[i])
         else:
-            vertical_cleaning.append(group_vertices)
-            group_vertices = []
+            print("appending: " + str(current_subarray))
+            subarrays.append(current_subarray)
+            current_subarray = [arr[i]]
 
-    return vertical_cleaning
+        if len(current_subarray) > 1:
+            subarrays.append(current_subarray)
 
-
-
-
-
+    return sorted(set([sum(subarray) / len(subarray) for subarray in subarrays]))
 
 # finds the difference between consecutive indices
 # gets average of these differences
@@ -145,32 +138,22 @@ def main():
     max_and_min_values = get_max_and_min_in_raw_data(raw_data)
 
     max_val = max_and_min_values[0]
-    min_val = max_and_min_values[1]
 
-    length_of_raw_data = len(raw_data)
+    indices_between_value_and_buffer_max = getting_indices_between_value_and_buffer(raw_data, max_val, max_val * .95)
 
-    horizontal_cleaning_max = getting_indices_between_value_and_buffer(raw_data, max_val, max_val * 0.95)
-    horizontal_cleaning_min = getting_indices_between_value_and_buffer(raw_data, min_val, min_val * 0.95)
+    # removing_extra_noise = removing_extra_noise_horizontally(indices_between_value_and_buffer_max, len(raw_data))
+    average_noise_max = averaging_noise(indices_between_value_and_buffer_max, raw_data)
 
-    # horizontal_and_vertical_cleaning_max_process_1 = removing_extra_noise_horizontally(horizontal_cleaning_max, length_of_raw_data)
-    # horizontal_and_vertical_cleaning_max_process_2 = averaging_noise(horizontal_cleaning_max, length_of_raw_data)
-    # horizontal_and_vertical_cleaning_min = averaging_noise(horizontal_cleaning_max, length_of_raw_data)
-
-    # print(horizontal_and_vertical_cleaning_max_process_1)
-    # print(horizontal_and_vertical_cleaning_max_process_2)
-
-    # print(horizontal_and_vertical_cleaning_min)
-
-    # horizontal_and_vertical_cleaning_min = removing_extra_noise_horizontally(horizontal_cleaning_min, length_of_raw_data)
-    #
-    # average_sum_of_diff_max = average_sum_of_differences(horizontal_and_vertical_cleaning_max)
-    # average_sum_of_diff_min = average_sum_of_differences(horizontal_and_vertical_cleaning_min)
-    #
-    # bpm_max = (average_sum_of_diff_max / sound.frame_rate) * 100
-    # bpm_min = (average_sum_of_diff_min / sound.frame_rate) * 100
-    #
-    # print("average bpm of max and min: \n" + str((bpm_min + bpm_max) / 2))
-    # show_plot_time(raw_data, time)
+    print(average_noise_max)
+    # average_sum_of_diff_max_method_1 = average_sum_of_differences(removing_extra_noise)
+    # average_sum_of_diff_max_method_2 = average_sum_of_differences(average_noise_max)
+    # #
+    # bpm_max_method_1 = (average_sum_of_diff_max_method_1 / sound.frame_rate) * 100
+    # bpm_max_method_2 = (average_sum_of_diff_max_method_2 / sound.frame_rate) * 100
+    # #
+    # print("bpm ma method 1: " + str(bpm_max_method_1))
+    # print("bpm max method 2: " + str(bpm_max_method_2))
+    show_plot_indices(raw_data)
 
 
 main()
