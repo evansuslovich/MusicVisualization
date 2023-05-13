@@ -93,30 +93,43 @@ def removing_extra_noise_horizontally(fit_between_buffer_and_max, length_of_data
     vertical_cleaning = []
     for i in range(0, len(fit_between_buffer_and_max) - 1):
         # are the indexes close to each other by a factor of 0.01 * len(raw_data) is this an accurate process?
-        if (fit_between_buffer_and_max[i + 1] - fit_between_buffer_and_max[i]) > (length_of_data * 0.05):
+        if (fit_between_buffer_and_max[i + 1] - fit_between_buffer_and_max[i]) > (length_of_data * 0.055):
             vertical_cleaning.append(fit_between_buffer_and_max[i])
 
     return vertical_cleaning
 
 
-def averaging_noise(arr, raw_data):
-    print(arr)
-    # print("raw_data length: " + str(len(raw_data) * 0.05))
-
-    subarrays = []
+# averaging noise using mean
+def averaging_noise_with_mean(arr, raw_data):
+    sub_arrays = []
     current_subarray = [arr[0]]
     for i in range(1, len(arr)):
-        if arr[i] - arr[i - 1] < len(raw_data) * 0.025:
+        if arr[i] - arr[i - 1] < len(raw_data) * 0.055:
             current_subarray.append(arr[i])
         else:
-            print("appending: " + str(current_subarray))
-            subarrays.append(current_subarray)
+            sub_arrays.append(current_subarray)
             current_subarray = [arr[i]]
 
-        if len(current_subarray) > 1:
-            subarrays.append(current_subarray)
+    return sorted(set([sum(subarray) / len(subarray) for subarray in sub_arrays]))
 
-    return sorted(set([sum(subarray) / len(subarray) for subarray in subarrays]))
+
+def averaging_noise_with_median(arr, raw_data):
+    sub_arrays = []
+    current_subarray = [arr[0]]
+    for i in range(1, len(arr)):
+        if arr[i] - arr[i - 1] < len(raw_data) * 0.055:
+            current_subarray.append(arr[i])
+        else:
+            mid_index = len(current_subarray) // 2
+            if len(current_subarray) % 2 == 0:
+                median = (current_subarray[mid_index - 1] + current_subarray[mid_index]) / 2
+            else:
+                median = current_subarray[mid_index]
+            sub_arrays.append([median])
+            current_subarray = [arr[i]]
+
+    return sorted(set([sum(sub_arrays) / len(sub_arrays) for sub_arrays in sub_arrays]))
+
 
 # finds the difference between consecutive indices
 # gets average of these differences
@@ -139,21 +152,29 @@ def main():
 
     max_val = max_and_min_values[0]
 
-    indices_between_value_and_buffer_max = getting_indices_between_value_and_buffer(raw_data, max_val, max_val * .95)
+    indices_between_value_and_buffer_max_method_1 = getting_indices_between_value_and_buffer(raw_data, max_val,
+                                                                                             max_val * .95)
+    indices_between_value_and_buffer_max_method_2 = getting_indices_between_value_and_buffer(raw_data, max_val,
+                                                                                             max_val * .95)
 
-    # removing_extra_noise = removing_extra_noise_horizontally(indices_between_value_and_buffer_max, len(raw_data))
-    average_noise_max = averaging_noise(indices_between_value_and_buffer_max, raw_data)
+    removing_extra_noise = removing_extra_noise_horizontally(indices_between_value_and_buffer_max_method_1,
+                                                             len(raw_data))
+    average_noise_max_mean = averaging_noise_with_mean(indices_between_value_and_buffer_max_method_2, raw_data)
+    average_noise_max_median = averaging_noise_with_median(indices_between_value_and_buffer_max_method_2, raw_data)
 
-    print(average_noise_max)
-    # average_sum_of_diff_max_method_1 = average_sum_of_differences(removing_extra_noise)
-    # average_sum_of_diff_max_method_2 = average_sum_of_differences(average_noise_max)
-    # #
-    # bpm_max_method_1 = (average_sum_of_diff_max_method_1 / sound.frame_rate) * 100
-    # bpm_max_method_2 = (average_sum_of_diff_max_method_2 / sound.frame_rate) * 100
-    # #
-    # print("bpm ma method 1: " + str(bpm_max_method_1))
-    # print("bpm max method 2: " + str(bpm_max_method_2))
-    show_plot_indices(raw_data)
+    average_sum_of_diff_max_method_1 = average_sum_of_differences(removing_extra_noise)
+    average_sum_of_diff_max_method_2 = average_sum_of_differences(average_noise_max_mean)
+    average_sum_of_diff_max_method_3 = average_sum_of_differences(average_noise_max_median)
+
+    bpm_max_method_1 = (average_sum_of_diff_max_method_1 / sound.frame_rate) * 100
+    bpm_max_method_2 = (average_sum_of_diff_max_method_2 / sound.frame_rate) * 100
+    bpm_max_method_3 = (average_sum_of_diff_max_method_3 / sound.frame_rate) * 100
+
+    print("bpm max method 1: " + str(bpm_max_method_1))
+    print("bpm max method 2: " + str(bpm_max_method_2))
+    print("bpm max method 3: " + str(bpm_max_method_3))
+
+    # show_plot_indices(raw_data)
 
 
 main()
