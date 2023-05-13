@@ -100,11 +100,11 @@ def removing_extra_noise_horizontally(fit_between_buffer_and_max, length_of_data
 
 
 # averaging noise using mean
-def averaging_noise_with_mean(arr, raw_data):
+def averaging_noise_with_mean(arr, length_of_raw_data):
     sub_arrays = []
     current_subarray = [arr[0]]
     for i in range(1, len(arr)):
-        if arr[i] - arr[i - 1] < len(raw_data) * 0.055:
+        if arr[i] - arr[i - 1] < length_of_raw_data * 0.055:
             current_subarray.append(arr[i])
         else:
             sub_arrays.append(current_subarray)
@@ -113,11 +113,11 @@ def averaging_noise_with_mean(arr, raw_data):
     return sorted(set([sum(subarray) / len(subarray) for subarray in sub_arrays]))
 
 
-def averaging_noise_with_median(arr, raw_data):
+def averaging_noise_with_median(arr, length_of_raw_data):
     sub_arrays = []
     current_subarray = [arr[0]]
     for i in range(1, len(arr)):
-        if arr[i] - arr[i - 1] < len(raw_data) * 0.055:
+        if arr[i] - arr[i - 1] < length_of_raw_data * 0.055:
             current_subarray.append(arr[i])
         else:
             mid_index = len(current_subarray) // 2
@@ -142,7 +142,7 @@ def average_sum_of_differences(horizontal_and_vertical_cleaning):
 
 
 def main():
-    sound_url = './songs/100-bpm-drum-loop-sample-c-sharp-key.mp3'
+    sound_url = './songs/Dystopia.mp3'
     sound = AudioSegment.from_mp3(sound_url)
 
     raw_data = get_raw_data(sound)
@@ -159,22 +159,22 @@ def main():
 
     removing_extra_noise = removing_extra_noise_horizontally(indices_between_value_and_buffer_max_method_1,
                                                              len(raw_data))
-    average_noise_max_mean = averaging_noise_with_mean(indices_between_value_and_buffer_max_method_2, raw_data)
-    average_noise_max_median = averaging_noise_with_median(indices_between_value_and_buffer_max_method_2, raw_data)
+    average_noise_max_mean = averaging_noise_with_mean(indices_between_value_and_buffer_max_method_2, len(raw_data))
+    average_noise_max_median = averaging_noise_with_median(indices_between_value_and_buffer_max_method_2, len(raw_data))
 
     average_sum_of_diff_max_method_1 = average_sum_of_differences(removing_extra_noise)
     average_sum_of_diff_max_method_2 = average_sum_of_differences(average_noise_max_mean)
     average_sum_of_diff_max_method_3 = average_sum_of_differences(average_noise_max_median)
 
-    bpm_max_method_1 = (average_sum_of_diff_max_method_1 / sound.frame_rate) * 100
-    bpm_max_method_2 = (average_sum_of_diff_max_method_2 / sound.frame_rate) * 100
-    bpm_max_method_3 = (average_sum_of_diff_max_method_3 / sound.frame_rate) * 100
-
+    bpm_max_method_1 = (average_sum_of_diff_max_method_1 / sound.frame_rate)
+    bpm_max_method_2 = (average_sum_of_diff_max_method_2 / sound.frame_rate)
+    bpm_max_method_3 = (average_sum_of_diff_max_method_3 / sound.frame_rate)
+    #
     print("bpm max method 1: " + str(bpm_max_method_1))
     print("bpm max method 2: " + str(bpm_max_method_2))
     print("bpm max method 3: " + str(bpm_max_method_3))
 
-    # show_plot_indices(raw_data)
+    show_plot_indices(raw_data)
 
 
 main()
