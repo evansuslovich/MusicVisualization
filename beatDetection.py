@@ -151,12 +151,8 @@ def main():
 
     raw_data = get_raw_data(sound)
 
-
-
     max_val = np.max(raw_data)
     min_val = np.min(raw_data)
-
-    max_val_2 = get_max_and_min_in_raw_data(raw_data)[0]
 
     indices_between_value_and_buffer_max_method_1 = getting_indices_between_value_and_buffer(raw_data, max_val,
                                                                                              max_val * .95)
