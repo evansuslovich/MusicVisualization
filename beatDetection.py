@@ -1,13 +1,16 @@
 from pydub import AudioSegment
 from pydub.playback import play
 import matplotlib.pyplot as plt
-import numpy
+import time
+import matplotlib as mpl
+import numpy as np
+
+mpl.rcParams['agg.path.chunksize'] = 100000
 
 
 def get_raw_data(sound):
     # get raw data
     return sound.get_array_of_samples()
-
 
 def get_channels(sound):
     # get channels
@@ -142,39 +145,49 @@ def average_sum_of_differences(horizontal_and_vertical_cleaning):
 
 
 def main():
+    start = time.time()
     sound_url = './songs/Dystopia.mp3'
     sound = AudioSegment.from_mp3(sound_url)
 
     raw_data = get_raw_data(sound)
-    time = get_time(raw_data, sound.frame_rate)
 
-    max_and_min_values = get_max_and_min_in_raw_data(raw_data)
 
-    max_val = max_and_min_values[0]
+
+    max_val = np.max(raw_data)
+    min_val = np.min(raw_data)
+
+    max_val_2 = get_max_and_min_in_raw_data(raw_data)[0]
 
     indices_between_value_and_buffer_max_method_1 = getting_indices_between_value_and_buffer(raw_data, max_val,
                                                                                              max_val * .95)
-    indices_between_value_and_buffer_max_method_2 = getting_indices_between_value_and_buffer(raw_data, max_val,
-                                                                                             max_val * .95)
 
-    removing_extra_noise = removing_extra_noise_horizontally(indices_between_value_and_buffer_max_method_1,
-                                                             len(raw_data))
-    average_noise_max_mean = averaging_noise_with_mean(indices_between_value_and_buffer_max_method_2, len(raw_data))
-    average_noise_max_median = averaging_noise_with_median(indices_between_value_and_buffer_max_method_2, len(raw_data))
+    removing_extra_noise = removing_extra_noise_horizontally(indices_between_value_and_buffer_max_method_1,len(raw_data))
+    average_noise_max_mean = averaging_noise_with_mean(indices_between_value_and_buffer_max_method_1, len(raw_data))
+    average_noise_max_median = averaging_noise_with_median(indices_between_value_and_buffer_max_method_1, len(raw_data))
+
 
     average_sum_of_diff_max_method_1 = average_sum_of_differences(removing_extra_noise)
     average_sum_of_diff_max_method_2 = average_sum_of_differences(average_noise_max_mean)
     average_sum_of_diff_max_method_3 = average_sum_of_differences(average_noise_max_median)
 
-    bpm_max_method_1 = (average_sum_of_diff_max_method_1 / sound.frame_rate)
-    bpm_max_method_2 = (average_sum_of_diff_max_method_2 / sound.frame_rate)
-    bpm_max_method_3 = (average_sum_of_diff_max_method_3 / sound.frame_rate)
-    #
+    num = abs(len(str(int(average_sum_of_diff_max_method_1))) - 7)
+
+    bpm_max_method_1 = (average_sum_of_diff_max_method_1 / sound.frame_rate * (10 ** num))
+    bpm_max_method_2 = (average_sum_of_diff_max_method_2 / sound.frame_rate * (10 ** num))
+    bpm_max_method_3 = (average_sum_of_diff_max_method_3 / sound.frame_rate * (10 ** num))
+
+
     print("bpm max method 1: " + str(bpm_max_method_1))
     print("bpm max method 2: " + str(bpm_max_method_2))
     print("bpm max method 3: " + str(bpm_max_method_3))
 
-    show_plot_indices(raw_data)
+    average = (bpm_max_method_1 + bpm_max_method_2 + bpm_max_method_3) / 3
+
+    print("average of three methods: " + str(average))
+    end = time.time()
+    print(end-start)
+
+    # show_plot_time(raw_data, time)
 
 
 main()
