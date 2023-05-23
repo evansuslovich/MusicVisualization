@@ -51,31 +51,8 @@ def show_plot_indices(raw_data):
     plt.show()
 
 
-# return an array, index 0 is max, index 1 is min.
-def get_max_and_min_in_raw_data(raw_data):
-    result = []
-
-    if len(raw_data) == 0:
-        result.append(-1)
-        result.append(-1)
-        return result
-
-    # gets the maximum and minimum values
-    max_val = raw_data[0]
-    min_val = raw_data[0]
-    for i in range(1, len(raw_data)):
-        if raw_data[i] > max_val:
-            max_val = raw_data[i]
-        if raw_data[i] < min_val:
-            min_val = raw_data[i]
-
-    result.append(max_val)
-    result.append(min_val)
-
-    return result
-
-
 # getting the values with high amplitudes
+# can we optimize this using np for speed boost?
 def getting_indices_between_value_and_buffer(raw_data, val, buffer_val):
     # loop through the entire array of raw data and see if it fits through buffer <= number <= max
     horizontal_cleaning = []
@@ -137,40 +114,68 @@ def averaging_noise_with_median(arr, length_of_raw_data):
 
 # finds the difference between consecutive indices
 # gets average of these differences
-def average_sum_of_differences(horizontal_and_vertical_cleaning):
+def average_sum_of_differences(arr):
     sum = 0
-    for i in range(0, len(horizontal_and_vertical_cleaning) - 1):
-        sum += horizontal_and_vertical_cleaning[i + 1] - horizontal_and_vertical_cleaning[i]
+    for i in range(0, len(arr) - 1):
+        sum += arr[i + 1] - arr[i]
 
-    return (sum / len(horizontal_and_vertical_cleaning))
+    return sum / len(arr)
 
 
 def average_bpm(raw_data, sound, val):
     length_of_raw_data = len(raw_data)
     buffer = val * 0.95
 
-    indices_between_value_and_buffer = getting_indices_between_value_and_buffer(raw_data, val, buffer)
 
+    # print(len(raw_data))
+    start = time.time()
+    indices_between_value_and_buffer = getting_indices_between_value_and_buffer(raw_data, val, buffer)
+    end = time.time()
+    # print("indices between value and buffer: " + str(end - start))
+
+    # print(indices_between_value_and_buffer)
+
+    start = time.time()
     removing_extra_noise_horizontal = \
         removing_extra_noise_horizontally(indices_between_value_and_buffer, length_of_raw_data)
+
+    # print("removing extra noise horizontally: " +  str(removing_extra_noise_horizontal))
 
     average_noise_max_mean = \
         averaging_noise_with_mean(indices_between_value_and_buffer, length_of_raw_data)
 
+    # print("averaging noise max mean: " + str(average_noise_max_mean))
+
     average_noise_max_median = \
         averaging_noise_with_median(indices_between_value_and_buffer, length_of_raw_data)
 
+    end = time.time()
+    # print("averaging noise horizontal, mean, median: " + str(end-start))
+
+    # print("averaging noise max median: " + str(average_noise_max_median))
+
+    start = time.time()
     average_sum_of_diff_max_method_1 = average_sum_of_differences(removing_extra_noise_horizontal)
     average_sum_of_diff_max_method_2 = average_sum_of_differences(average_noise_max_mean)
     average_sum_of_diff_max_method_3 = average_sum_of_differences(average_noise_max_median)
 
-    num = len(str(int(average_sum_of_diff_max_method_1))) - 7
+    print("average sum of diff max method 1: " + str(average_sum_of_diff_max_method_1))
+    print("average sum of diff max method 2: " + str(average_sum_of_diff_max_method_2))
+    print("average sum of diff max method 3: " + str(average_sum_of_diff_max_method_3))
+    end = time.time()
+    # print("average of sum of diff max and min methods: " + str(end-start))
 
-    bpm_max_method_1 = (average_sum_of_diff_max_method_1 / sound.frame_rate * (10 ** num))
-    bpm_max_method_2 = (average_sum_of_diff_max_method_2 / sound.frame_rate * (10 ** num))
-    bpm_max_method_3 = (average_sum_of_diff_max_method_3 / sound.frame_rate * (10 ** num))
+    bpm_max_method_1 = (average_sum_of_diff_max_method_1 / sound.frame_rate)
+    bpm_max_method_2 = (average_sum_of_diff_max_method_2 / sound.frame_rate)
+    bpm_max_method_3 = (average_sum_of_diff_max_method_3 / sound.frame_rate)
+
+    print("bpm max method 1 " + str(bpm_max_method_1))
+    print("bpm max method 2 " + str(bpm_max_method_2))
+    print("bpm max method 3 " + str(bpm_max_method_3))
 
     averaging_bpm = (bpm_max_method_1 + bpm_max_method_2 + bpm_max_method_3) / 3
+
+    print("average bpm: " + str(averaging_bpm))
 
     return averaging_bpm
 
@@ -181,17 +186,38 @@ def average_min_max_bpm(raw_data, sound, min_val, max_val):
 
     return (average_max_val_bpm + average_min_val_bpm) / 2
 
+def moving_average(arr, window):
+    return np.convolve(arr, np.ones(window), 'valid') / window
+
+
 def main():
     sound_url = './songs/Dystopia.mp3'
-    sound = AudioSegment.from_mp3(sound_url)
-    raw_data = get_raw_data(sound)
 
+
+    start = time.time()
+    sound = AudioSegment.from_mp3(sound_url)
+    end = time.time()
+    print("audio segment: " + str(end-start))
+
+    start = time.time()
+    raw_data = get_raw_data(sound)
+    end = time.time()
+    print("raw data: " + str(end-start))
+
+    start = time.time()
     max_val = np.max(raw_data)
     min_val = np.min(raw_data)
+    end = time.time()
+    print("min and max: " + str(end-start))
 
+    start = time.time()
     average_of_min_and_max_vals_bpm = average_min_max_bpm(raw_data, sound, min_val, max_val)
+    end = time.time()
+    # print("average of min and max vals: " + str(end-start))
 
     print(average_of_min_and_max_vals_bpm)
+
+    # show_plot_indices(raw_data)
 
 
 main()
