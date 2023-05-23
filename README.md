@@ -7,5 +7,5 @@
 
 Notes: 
 1. beatDetection.py: Focused on getting the BPM of a song using digital signal processing processes. 
-2. pitchDetectionAlgorithm.py: Later project, realized it's a lot bigger of a project than I orignally thought so I'm going to stick with just finding BPM.
+2. pitchDetectionAlgorithm.py: Later project, realized it's a lot bigger of a project than I originally thought so I'm going to stick with just finding BPM.
 3. plotWaveAudioFile.py: Plots a .wav audio file, beatDetection.py can graph using matplotlib.
